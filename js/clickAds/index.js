@@ -10,6 +10,59 @@ s.onload = function() {
 
 
 
+// 是否已经请求了
+var lastImg = '';
+var timer = setInterval(function(){
+	var isOpened = (function(){
+		if( !$('#newadurl').is(':hidden') && $('#newadurl').length!==0){
+			return true;
+		}else{
+			return false;
+		}
+	})()
+
+
+	var img = $('.yaoqiu').find('img').eq(0).attr('src');
+	if(isOpened && img!==lastImg){
+		fillAnswer();
+		lastImg = img;
+	}
+})
+
+
+function fillAnswer(){
+	var url = $('#workUrl').val(),	//搜索引擎
+		img = $('.yaoqiu').find('img').eq(0).attr('src'),	//图片
+		stepText = $('.yaoqiu').text();
+
+	//提取搜索关键字
+	var keyword = '';
+	try{
+		var text = stepText;
+		text = text.replace(/\s/g,'#');
+		text = text.replace(/((百度一下)|(输入关键词)|(搜索关键词)|(搜索)|(搜素)|(搜索#)|(输入))(:|：|\s|#)/g,'searchBegin');
+		text = text.match(/(searchBegin)[\u4e00-\u9fa5a-zA-Z0-9“”"]+/)[0];
+		keyword = text.replace(/searchBegin/g,"");
+	}catch(e){
+
+	}
+
+	chrome.runtime.sendMessage({
+		J_method:'getAnswer',
+		data:{
+			url:url,
+			img:img,
+			keyword:keyword
+		}
+	}, function(res) {
+		$('#newadurl').val(res.answer);
+
+	});
+
+}
+
+
+
 // var a = setInterval(function(){
 // 	if($){
 // 		window.my = {};
