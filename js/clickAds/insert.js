@@ -104,7 +104,7 @@ window.loadClickList = function(pagenum){
 				/*加载点击广告列表结束*/
 				/*显示广告内容开始*/
 				$.each($('.zhuanitem'), function (index, value) {
-						$(this).on('click', '.zhuanclick', function () {console.log(this);
+						$(this).on('click', '.zhuanclick', function () {
 							CurrentA = $('.zhuanitem').eq(index)
 							
 							$.ajax({
@@ -320,6 +320,213 @@ window.loadClickList = function(pagenum){
 		}
 	})
 }
+
+
+
+
+
+// 提交答案
+window.chksendBtn = function(){
+	if(isSubmit){
+		return false;	
+	}
+	/*
+	if(!document.referrer|| document.referrer.split('/')[2] !=  document.domain){
+		chkDesc('errortishi','请打开您的浏览器来访问本站',0);
+		return false;
+	}
+	*/
+	isSubmit = true;
+	$('#TijiaoButton').addClass('inloading');
+	$('#TijiaoButton').addClass('disabled');
+	$('#TijiaoButton').attr("disabled","disabled");
+	var clickid = getId("clickid").value;
+	var newadurl = getId("newadurl").value;
+		newadurl = trim(urlreplacejs(newadurl));
+
+		newadurl = escape(newadurl);
+
+	var refurl = document.referrer;
+	var offText = getId("offText").value;
+	var firstCk = getId("firstCk").value;
+	var YzmCheck = getId("YzmCheck").value;
+	var sign = getId("sign").value;
+	var action = getId("action").value; 
+	if(YzmCheck != 'success'){
+		isSubmit = false;
+		return isSubmit;
+	} 
+	if(getStrLen(newadurl) < 2){
+		chkDesc('content_url','提交网址或文字为空',0);
+		chkDescStatus('urlcheck',0);
+		//$('#TijiaoButton').removeClass('inloading');
+		isSubmit = false;
+		return false;
+	}
+	
+	if(firstCk!='2'){
+		chkDesc('errortishi','您没有点击第一步，复制网址并打开!请重新按第一步，第二步，第三步，第四步来操作',2);
+		getId("newadurl").value = '';
+		if (offText!='offText'){
+			getId("cktext").value = '';
+		}
+		$('#urlcheck').siblings("span,b").css("text-indent", "0");
+		$('#txtcheck').siblings("span,b").css("text-indent", "0");
+		chkDesc('content_url','请重新提交广告网址',0);
+		chkDesc('content_txt','请重新提交广告文字',0);
+		$('#urlcheck').removeAttr("class");
+		$('#txtcheck').removeAttr("class");
+		//$('#TijiaoButton').removeClass('inloading');
+		isSubmit = false;
+		return isSubmit;
+	}
+	/*
+	if(getStrLen(newadurl)>255||getStrLen(newadurl)<4){
+		chkDesc('errortishi','请输入4-255位字符的网址',0);
+		isSubmit = false;
+		return isSubmit;
+	}	
+	*/
+	if (offText!='offText'){
+		var cktext = getId("cktext").value;
+		cktext = trim(stripscript(cktext));
+		if(getStrLen(cktext) > 20 || getStrLen(cktext) < 2){
+			chkDesc('errortishi','输入网页上的文字,2到20位字',0);
+			$('#txtcheck').css('class','error');
+			//$('#TijiaoButton').removeClass('inloading');
+			isSubmit = false;
+			return isSubmit;
+		}
+	}		
+
+	/*
+	if(!clickUrlcheck(newadurl)){
+		isSubmit = false;
+		return isSubmit;
+	}
+	if(!clicktextcheck(cktext)){
+		isSubmit = false;
+		return isSubmit;
+	}
+	*/
+	var yzmValue=$('#yzm').val();
+	if(!chkInt(yzmValue)){
+		alert("请进行验证码验证操作后再来提交");
+		$('#TijiaoButton').removeAttr('disabled'); 
+		$('#TijiaoButton').removeClass('disabled'); 
+		$('#TijiaoButton').removeClass('inloading'); 
+		isSubmit = false;
+		return isSubmit;
+	}
+	if(yzmValue.length!=3){
+		alert("请进行验证码验证操作后再来提交");
+		$('#TijiaoButton').removeAttr('disabled'); 
+		$('#TijiaoButton').removeClass('disabled'); 
+		$('#TijiaoButton').removeClass('inloading'); 
+		isSubmit = false;
+		return isSubmit;
+	}
+
+	if(sign == undefined){
+		isSubmit = false;
+		return isSubmit;
+	}
+	$.ajax({
+		type: "POST",
+		url: "module/click/",
+		async: false,
+		dataType: "json",
+		data : "action="+action+"&firstCk="+firstCk+"&YzmCheck="+YzmCheck+"&yzmValue="+yzmValue+"&newadurl="+ newadurl +"&clickid="+clickid+"&cktext="+escape(cktext)+ "&offText="+offText+"&refurl="+refurl+"&sign="+sign+"&Isjiami=true&key="+Math.random(),
+		success: function(strJson){ 
+			if(strJson.status=='100'){
+				rwrm(CurrentA,'finish.jpg');
+				$('#TijiaoButton').removeAttr('disabled'); 
+				$('#TijiaoButton').removeClass('disabled'); 
+				dialog_close('tasklist_dig');
+				//if(dianjiWin){dianjiWin.close();}
+				alert('恭喜您！奖励成功');
+				return true;
+			}else if(strJson.status=='106' || strJson.status=='118'){
+				rwrm(CurrentA,'timeErr.jpg');
+				$('#TijiaoButton').removeAttr('disabled'); 
+				$('#TijiaoButton').removeClass('disabled'); 
+				location.reload();
+				dialog_close('tasklist_dig');
+				alert(strJson.msg);
+				// 不论成功失败都关闭
+				setTimeout(function(){
+					$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+				})
+				return true;
+			}else if(strJson.status=='114'){
+				$('#TijiaoButton').removeAttr('disabled'); 
+				$('#TijiaoButton').removeClass('disabled'); 
+				$('#TijiaoButton').removeClass('inloading'); 
+				alert(strJson.msg);
+				checkCodeError();
+				// 不论成功失败都关闭
+				setTimeout(function(){
+					$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+				})
+				return true;
+			}else if(strJson.status=='yzmErrorNum'){
+				rwrm(CurrentA,'timeErr.jpg');
+				dialog_close('tasklist_dig');
+				$('#TijiaoButton').removeAttr('disabled'); 
+				$('#TijiaoButton').removeClass('disabled'); 
+				$('#TijiaoButton').removeClass('inloading'); 
+				alert(strJson.msg);
+				// 不论成功失败都关闭
+				setTimeout(function(){
+					$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+				})
+				return false;
+			}else if(strJson.status=='120'){
+				alert(strJson.msg);
+				location.href ="http://www.5iads.cn/Notice/detail.asp?id=1060";
+				// 不论成功失败都关闭
+				setTimeout(function(){
+					$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+				})
+				return false;				
+			}else{		
+				//dialog_close('tasklist_dig');
+				alert(strJson.msg);
+				isSubmit = false;
+				// 不论成功失败都关闭
+				setTimeout(function(){
+					$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+				})
+				return isSubmit;
+			}
+
+
+
+		},
+		error:function(data){
+			console.log(data);
+			// 不论成功失败都关闭
+			setTimeout(function(){
+				$('#tasklist_dig').siblings('.ui-dialog-titlebar').find('.ui-dialog-titlebar-close').trigger('click');
+			})
+		}
+	})
+}
+
+
+
+
+
+
+
+
+$(document).delegate('#newadurl','click',function(){
+	clickUrlcheck(this.value);
+})
+
+
+
+
 $(function(){
 	loadClickList();
 })
@@ -367,5 +574,25 @@ function displayId(){
 		var realId = clickid.charAt(2)+clickid.charAt(3)+clickid.charAt(5)+clickid.charAt(7)+clickid.charAt(9);
 		var html = '<em>真实任务id：</em><span style="color:blue" class="realid">'+realId+'</span><span style="display:none" class="myid">'+clickid+'</span>';
 		_this.find('.zhuanclick').append(html);
+	})
+}
+
+
+// 验证码出错上报处理
+function checkCodeError(){
+
+	$.ajax({
+		url:'http://api.ruokuai.com/reporterror.json',
+		method:'post',
+		data:{
+			username:'chinaberry',
+			password:'zhusiyizsy',
+			softid:'84232',
+			softkey:'f3233971a6884688a2e94ed75063fb13',
+			id:$('#checkCodeId').text()
+		},
+		success:function(data){
+			console.log(data);
+		}
 	})
 }

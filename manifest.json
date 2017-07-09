@@ -27,7 +27,7 @@
       "js": ["static/jquery-1.8.1.js","js/baidu/index.js"]
     },
     {
-      "matches": ["https://m.baidu.com/*"],
+      "matches": ["*://m.baidu.com/*"],
       "js": ["static/jquery-1.8.1.js","js/mbaidu/index.js"]
     },
     {
@@ -36,12 +36,12 @@
     }
   ],
   "commands":{
-    "begin":{
+    "openAd":{
       "suggested_key": {
           "default": "Ctrl+Shift+5",
           "windows": "Alt+Shift+Q"
         },
-        "description": "打开pop页面",
+        "description": "点广告",
          "global": true 
     } 
   },
